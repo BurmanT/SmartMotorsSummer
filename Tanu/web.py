@@ -243,208 +243,6 @@ Your browser does not support the HTML canvas tag.</canvas>
             const sensor_array = [];
             const motor_array = [];
             var g;
-            // Tabs 
-            function openPage(pageName,elmnt,color) {
-              var elem = document.getElementById("heading");
-              var i, tabcontent, tablinks;
-              tabcontent = document.getElementsByClassName("tabcontent");
-              for (i = 0; i < tabcontent.length; i++) {
-                tabcontent[i].style.display = "none";
-              }
-              tablinks = document.getElementsByClassName("tablink");
-              for (i = 0; i < tablinks.length; i++) {
-                tablinks[i].style.backgroundColor = "";
-              }
-              document.getElementById(pageName).style.display = "block";
-              elmnt.style.backgroundColor = color;
-              
-              // displaying the motor and light sensor only when on exploration or training mode 
-              if(pageName == "train" || pageName == "explore"){
-                document.getElementById("motor").style.display = "block";
-                document.getElementById("slider_thing").style.display = "block";
-                document.getElementById("light_sensor").style.display = "block";
-              }
-              if(pageName == "explore")
-              {
-                  stop();
-              }
-              
-              // displaying the buttons when on training mode 
-              if(pageName == "train" ){
-                stop();
-                document.getElementById("train_test_button").style.display = "block";
-                document.getElementById("tableeee").style.display = "block";
-                document.getElementById("my_graph").style.display = "block";
-              }
-              
-              if(pageName == "play"){
-                //document.getElementById("motor").style.display = "block";
-                document.getElementById("light_sensor").style.display = "block";
-                document.getElementById("tableeee").style.display = "block";
-                document.getElementById("my_graph").style.display = "block";
-              
-              }
-              
-              var c = document.getElementById("myCanvas");
-        g = new Graph(c)
-              
-              
-            }
-            
-            // Get the element with id="defaultOpen" and click on it
-            document.getElementById("defaultOpen").click();
-    
-            // upDateProgressBar takes in progressBar container and updates the display of progress bar given a value 
-            function updateProgressBar(progressBar, value) {
-              progressBar.querySelector(".progress__fill").style.width = `${value}%`;
-              progressBar.querySelector(".progress__text").textContent = `${value}%`;
-            }
-            const myProgressBar = document.querySelector(".progress");
-            
-            // set the value of the gauge 
-            function setGaugeValue(gauge, value) {
-                  if (value < 0 || value > 1) {
-                    return;
-                  }
-                  gauge.querySelector(".gauge__fill").style.transform = `rotate(${
-                    value / 2
-                  }turn)`;
-                  gauge.querySelector(".gauge__cover").textContent = `${Math.round(
-                    value * 180
-                  )} deg`;
-            }
-    
-            // updates slidervalue 
-            function updateSliderPWM(element) {
-                  var sliderValue = document.getElementById("pwmSlider").value;
-                  const gaugeElement = document.querySelector(".gauge");
-                  setGaugeValue(gaugeElement, sliderValue/180);
-                  console.log(sliderValue);
-                  var xhr = new XMLHttpRequest();
-                  xhr.open("GET", "/slider?value="+sliderValue, true);
-                  xhr.send();
-                  g.update_motor_val(Number(sliderValue))
-                  g.redraw()
-            }
-            const gaugeElement = document.querySelector(".gauge");
-            setGaugeValue(gaugeElement, 0.5);
-            
-            // update the light sensor reading 
-            var ajaxRequest = new XMLHttpRequest();  
-       
-            function ajaxLoad(ajaxURL)  
-            {  
-                ajaxRequest.open('GET',ajaxURL,true);  
-                ajaxRequest.onreadystatechange = function()  
-                {  
-                    if(ajaxRequest.readyState == 4 && ajaxRequest.status==200)  
-                     {  
-                        var ajaxResult = ajaxRequest.responseText;  
-                        var tmpArray = ajaxResult.split("|");  
-                        document.getElementById("temp").innerHTML = tmpArray[0];
-                        if(tmpArray[1] != "-1")
-                        {
-                            g.update_motor_val(Number(tmpArray[1]))
-                        }
-                        updateProgressBar(myProgressBar, parseInt(ajaxResult));
-                        g.update_sensor_val(Number(tmpArray[0]))
-                        g.redraw()
-                     }
-                 
-                }  
-                ajaxRequest.send();  
-            }  
-             
-            function updateDHT()   
-            {   
-                ajaxLoad('getDHT');   
-            }
-            // Controls how often the sensor is read 
-            setInterval(updateDHT, 250);
-            
-            // add a row to the table
-            function addvalue(){
-                // get slider value reading
-                var sliderValue = document.getElementById("pwmSlider").value;
-                // get sensor reading
-                var sensorValue = document.getElementById("temp").innerHTML;
-                
-                var xhttp = new XMLHttpRequest();
-                xhttp.open("GET", "/?addvalue="+sliderValue+"="+sensorValue, true);
-                xhttp.send();
-                
-                
-                // Get the table body element in which you want to add row
-                let table = document.getElementById("tableBody");
-           
-                // Create row element
-                let row = document.createElement("tr")
-          
-                // Create cells
-                let c1 = document.createElement("td")
-                let c2 = document.createElement("td")
-                
-                sensor_array.push(Number(sensorValue));
-                motor_array.push(Number(sliderValue));
-                
-                console.log("Sensor Array", sensor_array)
-                console.log("Motor Array", motor_array)
-              
-                // Insert data to cells
-                c1.innerText = sensorValue;
-                c2.innerText = sliderValue;
-          
-                // Append cells to row
-                row.appendChild(c1);
-                row.appendChild(c2);
-              
-                // Append row to table body
-                table.appendChild(row)
-                
-                // Add point to graph
-                g.redraw();
-            }
-            
-            function deletevalue() {
-                var xhttp = new XMLHttpRequest();
-                
-                xhttp.open("GET", "/?deletevalue", true);
-                xhttp.send();
-                
-                var table = document.getElementById('myTable');
-                var rowCount = table.rows.length;
-                if(rowCount > 1) {
-                    table.deleteRow(rowCount -1);
-                    sensor_array.pop();
-                    motor_array.pop();
-                    g.redraw();
-                
-                }
-                
-            }
-            
-            function test(){
-                var button_text = document.getElementById('toggle_play').innerHTML;
-                if(button_text == "Play!"){
-                    document.getElementById('toggle_play').innerHTML = "Stop!";
-                    document.getElementById('toggle_play').style.backgroundColor = 'red';
-                    var xhttp = new XMLHttpRequest();
-                    xhttp.open("GET", "/?test", true);
-                    xhttp.send();
-                      
-                } else {
-                    stop();
-                }
-            }
-            
-            function stop(){
-                document.getElementById('toggle_play').innerHTML = "Play!";
-                document.getElementById('toggle_play').style.backgroundColor = 'green';
-                var xhttp = new XMLHttpRequest();
-                xhttp.open("GET", "/?stop", true);
-                xhttp.send();
-            }
-            
             class Graph{
             
             constructor(c) {  // Constructor
@@ -464,7 +262,6 @@ Your browser does not support the HTML canvas tag.</canvas>
                 
                this.redraw();
                
-   
             }
             
            update_sensor_val(sval){
@@ -572,6 +369,245 @@ Your browser does not support the HTML canvas tag.</canvas>
         this.ctx.fill();
       }
             }
+            // Tabs 
+            function openPage(pageName,elmnt,color) {
+              var elem = document.getElementById("heading");
+              var i, tabcontent, tablinks;
+              tabcontent = document.getElementsByClassName("tabcontent");
+              for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+              }
+              tablinks = document.getElementsByClassName("tablink");
+              for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].style.backgroundColor = "";
+              }
+              document.getElementById(pageName).style.display = "block";
+              elmnt.style.backgroundColor = color;
+              
+              // displaying the motor and light sensor only when on exploration or training mode 
+              if(pageName == "train" || pageName == "explore"){
+                document.getElementById("motor").style.display = "block";
+                document.getElementById("slider_thing").style.display = "block";
+                document.getElementById("light_sensor").style.display = "block";
+              }
+              if(pageName == "explore")
+              {
+                  stop();
+              }
+              
+              // displaying the buttons when on training mode 
+              if(pageName == "train" ){
+                stop();
+                document.getElementById("train_test_button").style.display = "block";
+                document.getElementById("tableeee").style.display = "block";
+                document.getElementById("my_graph").style.display = "block";
+              }
+              
+              if(pageName == "play"){
+                //document.getElementById("motor").style.display = "block";
+                document.getElementById("light_sensor").style.display = "block";
+                document.getElementById("tableeee").style.display = "block";
+                document.getElementById("my_graph").style.display = "block";
+              
+              }
+              
+              var c = document.getElementById("myCanvas");
+              g = new Graph(c)
+              
+              
+            }
+            
+            // Get the element with id="defaultOpen" and click on it
+            document.getElementById("defaultOpen").click();
+    
+            // upDateProgressBar takes in progressBar container and updates the display of progress bar given a value 
+            function updateProgressBar(progressBar, value) {
+              progressBar.querySelector(".progress__fill").style.width = `${value}%`;
+              progressBar.querySelector(".progress__text").textContent = `${value}%`;
+            }
+            const myProgressBar = document.querySelector(".progress");
+            
+            // set the value of the gauge 
+            function setGaugeValue(gauge, value) {
+                  if (value < 0 || value > 1) {
+                    return;
+                  }
+                  gauge.querySelector(".gauge__fill").style.transform = `rotate(${
+                    value / 2
+                  }turn)`;
+                  gauge.querySelector(".gauge__cover").textContent = `${Math.round(
+                    value * 180
+                  )} deg`;
+            }
+    
+            // updates slidervalue 
+            function updateSliderPWM(element) {
+                  var sliderValue = document.getElementById("pwmSlider").value;
+                  const gaugeElement = document.querySelector(".gauge");
+                  setGaugeValue(gaugeElement, sliderValue/180);
+                  console.log(sliderValue);
+                  var xhr = new XMLHttpRequest();
+                  xhr.open("GET", "/slider?value="+sliderValue, true);
+                  xhr.send();
+                  g.update_motor_val(Number(sliderValue))
+                  g.redraw()
+            }
+            const gaugeElement = document.querySelector(".gauge");
+            setGaugeValue(gaugeElement, 0.5);
+            
+            // Get stored file sensor and motor pairs
+            function loadDoc() {
+                  const xhttp = new XMLHttpRequest();
+                  xhttp.onload = function() {
+                    var resultArray = this.responseText.split(";");
+                    
+                    let i = 0;
+                    console.log(resultArray.length);
+                    console.log(resultArray);
+                    while (i < resultArray.length-1) {
+                        var val = resultArray[i];
+                        var val_split = val.split(",");
+                        addvalue(true, val_split[0], val_split[1]);
+                        console.log("motor and sensor")
+                        console.log(val_split[0]);
+                        console.log(val_split[1]);
+                        g.update_motor_val(Number(val_split[0]));
+                        g.update_sensor_val(Number(val_split[1]));
+                        i++;
+                    }
+                    
+                  }
+                  xhttp.open("GET", "onLoad");
+                  xhttp.send();
+            }
+
+            // only sends request to retrieve data from trainData.txt once 
+            loadDoc();
+            
+            // update the light sensor reading 
+            var ajaxRequest = new XMLHttpRequest();  
+       
+            function ajaxLoad(ajaxURL)  
+            {  
+                ajaxRequest.open('GET',ajaxURL,true);  
+                ajaxRequest.onreadystatechange = function()  
+                {  
+                    if(ajaxRequest.readyState == 4 && ajaxRequest.status==200)  
+                     {  
+                        var ajaxResult = ajaxRequest.responseText;  
+                        var tmpArray = ajaxResult.split("|");  
+                        document.getElementById("temp").innerHTML = tmpArray[0];
+                        if(tmpArray[1] != "-1")
+                        {
+                            g.update_motor_val(Number(tmpArray[1]))
+                        }
+                        updateProgressBar(myProgressBar, parseInt(ajaxResult));
+                        g.update_sensor_val(Number(tmpArray[0]))
+                        g.redraw()
+                     }
+                 
+                }  
+                ajaxRequest.send();  
+            }  
+             
+            function updateDHT()   
+            {   
+                ajaxLoad('getDHT');   
+            }
+            // Controls how often the sensor is read 
+            setInterval(updateDHT, 250);
+            
+            // add a row to the table
+            // firstPageLoad is boolean: True if first time loading the page then give motor and sensor parameters
+            function addvalue(firstPageLoad, motor, sensor){
+            
+                if(firstPageLoad){
+                    // set motor value reading
+                    var sliderValue = motor;
+                    // set sensor reading
+                    var sensorValue = sensor;
+                    
+                } else {
+                    // get slider value reading
+                    var sliderValue = document.getElementById("pwmSlider").value;
+                    // get sensor reading
+                    var sensorValue = document.getElementById("temp").innerHTML;
+                    var xhttp = new XMLHttpRequest();
+                    xhttp.open("GET", "/?addvalue="+sliderValue+"="+sensorValue, true);
+                    xhttp.send();
+                }
+                
+                // Get the table body element in which you want to add row
+                let table = document.getElementById("tableBody");
+           
+                // Create row element
+                let row = document.createElement("tr")
+          
+                // Create cells
+                let c1 = document.createElement("td")
+                let c2 = document.createElement("td")
+                
+                sensor_array.push(Number(sensorValue));
+                motor_array.push(Number(sliderValue));
+                
+                console.log("Sensor Array", sensor_array)
+                console.log("Motor Array", motor_array)
+              
+                // Insert data to cells
+                c1.innerText = sensorValue;
+                c2.innerText = sliderValue;
+          
+                // Append cells to row
+                row.appendChild(c1);
+                row.appendChild(c2);
+              
+                // Append row to table body
+                table.appendChild(row)
+                
+                // Add point to graph
+                g.redraw();
+            }
+            
+            function deletevalue() {
+                var xhttp = new XMLHttpRequest();
+                
+                xhttp.open("GET", "/?deletevalue", true);
+                xhttp.send();
+                
+                var table = document.getElementById('myTable');
+                var rowCount = table.rows.length;
+                if(rowCount > 1) {
+                    table.deleteRow(rowCount -1);
+                    sensor_array.pop();
+                    motor_array.pop();
+                    g.redraw();
+                
+                }
+                
+            }
+            
+            function test(){
+                var button_text = document.getElementById('toggle_play').innerHTML;
+                if(button_text == "Play!"){
+                    document.getElementById('toggle_play').innerHTML = "Stop!";
+                    document.getElementById('toggle_play').style.backgroundColor = 'red';
+                    var xhttp = new XMLHttpRequest();
+                    xhttp.open("GET", "/?test", true);
+                    xhttp.send();
+                      
+                } else {
+                    stop();
+                }
+            }
+            
+            function stop(){
+                document.getElementById('toggle_play').innerHTML = "Play!";
+                document.getElementById('toggle_play').style.backgroundColor = 'green';
+                var xhttp = new XMLHttpRequest();
+                xhttp.open("GET", "/?stop", true);
+                xhttp.send();
+            }
+            
             
             
     </script>
@@ -580,6 +616,9 @@ Your browser does not support the HTML canvas tag.</canvas>
     </html> 
 """
     return webpage
+
+
+
 
 
 

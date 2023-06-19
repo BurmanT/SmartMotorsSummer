@@ -1,3 +1,5 @@
+### NOTE: trainData.txt saves values as (sensor, motor)
+### But the on memory training_data and training_data_from_file save it as (motor, sensor)
 import gc
 gc.collect()
 import time
@@ -86,16 +88,16 @@ def read_sensor():
 
 
 # saves training_data to a file trainData.txt
-# each line is motorData,lightSensor
+# each line is lightSensor,motorData\n
 def saveDataToFile():
     f=open("trainData.txt","w")
     length = len(training_data)
     for ind, val in enumerate(training_data):
-        lightSensor = val[0]
-        motor = val[1]
-        f.write(str(motor))
-        f.write(",")
+        lightSensor = val[1]
+        motor = val[0]
         f.write(str(lightSensor))
+        f.write(",")
+        f.write(str(motor))
         f.write('\n')
     f.close()
 
@@ -122,7 +124,7 @@ def runData():
     sens = int((100 * int(t))/4095)
     light_val = []
     motor_val = []
-    for (light, mot) in training_data_from_file:
+    for (mot, light) in training_data_from_file:
         dist = abs(sens - light)
         light_val.append(dist)
         motor_val.append(mot)
@@ -133,11 +135,14 @@ def runData():
     print(sens)
     print("MOTOR VALUE ROTATE TO IS...")
     print(pos)
+    print(light_val)
+    print(motor_val)
+    print(index)
     global global_TEST_motor
     global_TEST_motor = pos
     motor.write_angle(180-pos)
     
-# reads the file where each line is the motor,light data
+# reads the file where each line is the light data, motor data
 # returns [(motor,light), (motor,light)]
 def readFileAndStoreData(filename):
     with open("trainData.txt", "r") as values:
@@ -145,12 +150,39 @@ def readFileAndStoreData(filename):
     data_tuples = []
     for l in lines:
         as_list = l.split(",")
-        motor= as_list[0]
-        light = as_list[1]
+        motor= as_list[1]
+        light = as_list[0]
         tuples = (int(motor), int(light))
         data_tuples.append(tuples)
         updateDataReadFromFile(data_tuples)
-    
+
+def add_pair(light, motor):
+    tup = (int(motor), int(light))
+    global training_data
+    training_data.append(tup)
+
+# New function for displaying current values in text file 
+# reads the file where each line is the motor,light data
+# returns "motor,light;motor,light" as a string
+# To avoid an error: If trainData.txt is empty make sure starts with line 1 
+def readFile():
+    with open("trainData.txt", "r") as values:
+        lines = values.readlines()
+    web_string = ""
+    print(lines)
+    print(len(lines))
+    if (len(lines) > 0):
+        for l in lines:
+            print("IN READ FILE")
+            print(l)
+            as_list = l.split(",")
+            motor= as_list[1]
+            light = as_list[0].split('\n')[0]
+            add_pair(int(light), int(motor))
+            web_string = web_string + motor + "," + light + ";"
+    print(training_data)
+    return web_string
+
 while True:
     try:
         conn, addr = s.accept()
@@ -163,10 +195,18 @@ while True:
         
         if(STATE == 0):
             runData()
+        
+        # request to load the initial data that is stored  
+        if request.find('/onLoad') == 6:
+            # read current training data from file and send it to web browser
+            reply = readFile()
+
             
         # setting the sensor reading     
         if request.find('/getDHT') == 6:
+            print("error here")
             t = read_sensor()
+            print("or here")
             x = int((100 * int(t))/4095)
     
             # if on testing, then send the nearest motor value 
@@ -191,7 +231,9 @@ while True:
             motor_light = split_values[1].split(" ", 1)[0]
             mot_val_save = motor_light.split("=")[0]
             lit_val_save = motor_light.split("=")[1]
+            print("MOTOR VALUE SAVED")
             print(mot_val_save)
+            print("SENSOR VALUE SAVED")
             print(lit_val_save)
             addData(int(mot_val_save), int(lit_val_save))
                 
@@ -222,6 +264,8 @@ gc.collect()
 display.text("Error encountered", 20,20,1)
 display.show()
 s.close()
+
+
 
 
 
