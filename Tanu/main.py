@@ -71,6 +71,7 @@ STATE = 1
 
 # during test, saves the motor value associated with the sensor 
 global_TEST_motor = 0
+NN_index = -1
 
 def updateStateTEST():
     global STATE
@@ -129,15 +130,18 @@ def runData():
         light_val.append(dist)
         motor_val.append(mot)
     # get the index of the least light_val
-    index = light_val.index(min(light_val))
-    pos = motor_val[index]
+    global NN_index 
+    NN_index = light_val.index(min(light_val))
+    pos = motor_val[NN_index]
     print("SENSOR VALUE IS...")
     print(sens)
     print("MOTOR VALUE ROTATE TO IS...")
     print(pos)
     print(light_val)
     print(motor_val)
-    print(index)
+    print("Nearest neighbor index: " + str(NN_index))
+    print("Training data (motor, sensor): " + str(training_data))
+
     global global_TEST_motor
     global_TEST_motor = pos
     motor.write_angle(180-pos)
@@ -180,6 +184,8 @@ def readFile():
             light = as_list[0].split('\n')[0]
             add_pair(int(light), int(motor))
             web_string = web_string + motor + "," + light + ";"
+    else:
+        web_string = "0"
     print(training_data)
     return web_string
 
@@ -209,14 +215,17 @@ while True:
             print("or here")
             x = int((100 * int(t))/4095)
     
-            # if on testing, then send the nearest motor value 
+            # if on testing, then send the nearest motor value and index
             if (STATE == 0):
                 motor_rotation = str(global_TEST_motor)
+                NN_index_str = str(NN_index)
             # otherwise send "-1"
             else:
                 motor_rotation = "-1"
+                NN_index_str = "-1"
             # set sensor variable
-            reply = str(x) + "|" + motor_rotation 
+            reply = str(x) + "|" + motor_rotation + "|" + NN_index_str
+            print(NN_index_str)
         
         if request.find('/slider') == 6:
             splitval = request.split("=", 1)
@@ -264,8 +273,4 @@ gc.collect()
 display.text("Error encountered", 20,20,1)
 display.show()
 s.close()
-
-
-
-
 
