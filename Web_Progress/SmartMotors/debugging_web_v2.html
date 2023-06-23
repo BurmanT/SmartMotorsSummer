@@ -50,8 +50,6 @@
       /* Gauge and Slider for motor */
 
       .gauge {
-        margin: auto;
-        width: 100%;
         max-width: 250px;
         font-family: "Roboto", sans-serif;
         font-size: 32px;
@@ -231,6 +229,7 @@
       .flex-row {
         display: flex;
         justify-content: center;
+        align-items: center;
         width: 100%;
       }
 
@@ -245,7 +244,12 @@
       }
 
       .motor_label {
-        text-align: left;
+        text-align: center;
+      }
+
+      .motor {
+        width: 250px;
+        height: 125px;
       }
     </style>
   </head>
@@ -297,8 +301,10 @@
       </h2>
     </div>
 
+    <p id="motor_label" class="motor_label">Motor</p>
+
     <div class="flex-row">
-      <div id="motor" class="tabcontent">
+      <div id="motor" class="motor">
         <div class="gauge">
           <div class="gauge__body">
             <div class="gauge__fill"></div>
@@ -306,10 +312,10 @@
           </div>
         </div>
       </div>
+
       <div>
         <!-- GRAPH -->
         <div id="my_graph" class="tabcontent">
-          <p id="motor_label" class="motor_label">Motor</p>
           <canvas
             class="graph"
             id="myCanvas"
@@ -608,7 +614,6 @@
 
         // displaying the motor and light sensor only when on exploration or training mode
         if (pageName == "train" || pageName == "explore") {
-          document.getElementById("motor").style.display = "block";
           document.getElementById("light_sensor").style.display = "block";
           document.getElementById("my_graph").style.display = "block";
           document.getElementById("myTable").classList.remove("hideDelete");
@@ -633,7 +638,6 @@
         }
 
         if (pageName == "play") {
-          document.getElementById("motor").style.display = "block";
           document.getElementById("motor_label").style.display = "none";
           document.getElementById("light_sensor").style.display = "block";
           document.getElementById("tableeee").style.display = "block";
