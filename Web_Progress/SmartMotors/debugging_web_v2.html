@@ -766,10 +766,10 @@
 
       // for touch screens
       c.addEventListener("touchstart", function (e) {
-        //prevent default interactive behavior
-        e.preventDefault();
-        const touch = e.touches[0];
         if (!play_mode) {
+          //prevent default interactive behavior
+          e.preventDefault();
+          const touch = e.touches[0];
           //update variables to start dragging
           mouseDragging = true;
           startY = touch.clientY;
@@ -792,8 +792,9 @@
 
       // for touch screens
       window.addEventListener("touchend", function (e) {
-        e.preventDefault();
         if (mouseDragging && !play_mode) {
+          e.preventDefault();
+
           mouseDragging = false;
 
           // send the motor value to main.py to move the motor
@@ -836,8 +837,8 @@
 
       //for touch screens
       c.addEventListener("touchmove", function (e) {
-        e.preventDefault();
         if (mouseDragging && !play_mode) {
+          e.preventDefault();
           // how many pixels the mouse moved
           const touch = e.touches[0];
           var deltaY = startY - touch.clientY;
